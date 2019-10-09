@@ -57,7 +57,7 @@ public class ResourceManager {
     private HttpResponse handleGet(HttpRequest request) {
         HttpResponse response = new HttpResponse();
         byte[] content = null;
-        String mimeType = "";
+        String mimeType = null;
 
         try {
             content = readResource(request.getUri());
@@ -70,7 +70,7 @@ public class ResourceManager {
             response.setStatusCode(403);
         }
 
-        response.getHeaders().put("Content-Type", mimeType);
+        if(mimeType != null) response.getHeaders().put("Content-Type", mimeType);
         response.setBody(content);
 
         logger.info("GET " + request.getUri() + " with status " + response.getStatusCode());
@@ -148,6 +148,6 @@ public class ResourceManager {
     }
 
     private String getResourceMimeType(String uri) {
-        return URLConnection.guessContentTypeFromName(Path.of(uri).getFileName().toString());
+        return URLConnection.guessContentTypeFromName(uri);
     }
 }
