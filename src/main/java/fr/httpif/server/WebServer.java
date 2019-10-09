@@ -22,6 +22,11 @@ import fr.httpif.server.models.HttpRequest;
  * @version 1.0
  */
 public class WebServer {
+  private ResourceManager resourceManager;
+
+  public WebServer(String[] args) {
+    this.resourceManager = new ResourceManager(args[0]);
+  }
 
   /**
    * WebServer constructor.
@@ -58,7 +63,7 @@ public class WebServer {
         while (!str.equals("")) str = in.readLine();
 
         //TODO: handle requests
-        out.println(ResourceManager.INSTANCE.handleRequest(new HttpRequest(HttpMethodEnum.GET, "/")));
+        out.println(resourceManager.handleRequest(new HttpRequest(HttpMethodEnum.GET, "/index.html")));
 
         out.flush();
         remote.close();
@@ -75,7 +80,7 @@ public class WebServer {
    *            Command line parameters are not used.
    */
   public static void main(String args[]) {
-    WebServer ws = new WebServer();
+    WebServer ws = new WebServer(args);
     ws.start();
   }
 }
