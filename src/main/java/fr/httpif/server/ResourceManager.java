@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -43,8 +44,8 @@ public class ResourceManager {
         else if(method == HttpMethodEnum.HEAD) response = handleHead(request);
 
         response.setVersion(request.getVersion());
-        response.setStatusCode(200);
         response.getHeaders().put("Server", "htt-pif");
+
         if (response.getBody() != null) {
             response.getHeaders().put("Content-Length", String.valueOf(response.getBody().length));
         }
@@ -55,8 +56,11 @@ public class ResourceManager {
     private HttpResponse handleGet(HttpRequest request) {
         HttpResponse response = new HttpResponse();
         byte[] content = null;
+        String mimeType = "";
+
         try {
             content = readResource(request.getUri());
+            mimeType = getResourceMimeType(request.getUri());
         } catch (FileNotFoundException e) {
             response.setStatusCode(404);
         } catch (ServerErrorException e) {
@@ -64,8 +68,8 @@ public class ResourceManager {
         } catch (FileIsDirectoryException e) {
             response.setStatusCode(403);
         }
-        //TODO
-        response.getHeaders().put("Content-Type", "text/html");
+
+        response.getHeaders().put("Content-Type", mimeType);
         response.setBody(content);
 
         logger.info("GET " + request.getUri() + " with status " + response.getStatusCode());
@@ -91,7 +95,7 @@ public class ResourceManager {
 
     private byte[] readResource(String uri) throws FileNotFoundException, FileIsDirectoryException, ServerErrorException {
         Path path = Path.of(webRoot, uri);
-        byte[] content = null;
+        byte[] content;
 
         File file = path.toFile();
         if(!file.exists()) throw new FileNotFoundException();
@@ -100,10 +104,14 @@ public class ResourceManager {
         try {
             content = Files.readAllBytes(path);
         } catch(IOException e) {
-            //TODO
+            e.printStackTrace();
             throw new ServerErrorException();
         }
 
         return content;
+    }
+
+    private String getResourceMimeType(String uri) {
+        return URLConnection.guessContentTypeFromName(Path.of(uri).getFileName().toString());
     }
 }
