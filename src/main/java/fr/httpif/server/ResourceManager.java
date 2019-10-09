@@ -1,5 +1,6 @@
 package fr.httpif.server;
 
+import fr.httpif.server.exceptions.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,7 @@ public class ResourceManager {
         notImplementedResponse.setBody("Method not implemented.".getBytes());
     }
 
-    public HttpResponse handleRequest(HttpRequest request) {
+    public HttpResponse handleRequest(HttpRequest request) throws BadRequestException, ServerErrorException {
         HttpResponse response = notImplementedResponse;
         HttpMethodEnum method = request.getMethod();
 
@@ -78,19 +79,54 @@ public class ResourceManager {
     }
 
     private HttpResponse handlePost(HttpRequest request) {
-        return notImplementedResponse;
+        // TODO dynamic resource
+        return handleGet(request);
     }
 
-    private HttpResponse handlePut(HttpRequest request) {
-        return notImplementedResponse;
+    private HttpResponse handlePut(HttpRequest request) throws ServerErrorException, BadRequestException {
+        Path path = Path.of(webRoot, request.getUri());
+        File file = path.toFile();
+
+        if (request.getBody() != null) {
+            throw new BadRequestException("Empty body");
+        }
+
+        try {
+            Files.write(path, request.getBody());
+        } catch(IOException e) {
+            logger.error(e.toString());
+            throw new ServerErrorException();
+        }
+        HttpResponse response = new HttpResponse();
+        response.getHeaders().put("Content-Location", request.getUri());
+        response.setStatusCode(201); //created
+        return response;
     }
 
-    private HttpResponse handleDelete(HttpRequest request) {
-        return notImplementedResponse;
+    private HttpResponse handleDelete(HttpRequest request) throws ServerErrorException {
+        HttpResponse response = new HttpResponse();
+        Path path = Path.of(webRoot, request.getUri());
+        File file = path.toFile();
+
+        if (!file.exists()) {
+            response.setStatusCode(404);
+            return response;
+        }
+        try {
+            Files.delete(path);
+        } catch(IOException e) {
+            logger.error(e.toString());
+            throw new ServerErrorException();
+        }
+
+        response.setStatusCode(204);
+        return response;
     }
 
     private HttpResponse handleHead(HttpRequest request) {
-        return notImplementedResponse;
+        HttpResponse response = handleGet(request);
+        response.setBody(null);
+        return response;
     }
 
     private byte[] readResource(String uri) throws FileNotFoundException, FileIsDirectoryException, ServerErrorException {
@@ -104,7 +140,7 @@ public class ResourceManager {
         try {
             content = Files.readAllBytes(path);
         } catch(IOException e) {
-            e.printStackTrace();
+            logger.error(e.toString());
             throw new ServerErrorException();
         }
 
