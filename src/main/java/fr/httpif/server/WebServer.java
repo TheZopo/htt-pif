@@ -2,6 +2,9 @@
 
 package fr.httpif.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import fr.httpif.server.network.ClientThread;
 
 import java.io.BufferedReader;
@@ -21,6 +24,7 @@ import java.net.Socket;
  * @version 1.0
  */
 public class WebServer {
+  private static final Logger logger = LoggerFactory.getLogger(WebServer.class);
   private ResourceManager resourceManager;
 
   public WebServer(String[] args) {
@@ -33,17 +37,17 @@ public class WebServer {
   protected void start() {
     ServerSocket s;
 
-    System.out.println("Webserver starting up on port 80");
-    System.out.println("(press ctrl-c to exit)");
+    logger.info("Webserver starting up on port 80");
+    logger.info("(press ctrl-c to exit)");
     try {
       // create the main server socket
       s = new ServerSocket(3000);
     } catch (Exception e) {
-      System.out.println("Error: " + e);
+      logger.error("Error: " + e);
       return;
     }
 
-    System.out.println("Waiting for connection");
+    logger.info("Waiting for connection");
     for (;;) {
       try {
         // wait for a connection
@@ -51,7 +55,7 @@ public class WebServer {
         new ClientThread(remote).start();
 
       } catch (Exception e) {
-        System.out.println("Error: " + e);
+        logger.error("Error: " + e);
       }
     }
   }

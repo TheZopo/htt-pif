@@ -35,8 +35,4 @@ public abstract class HttpMessage {
     public void setVersion(String version) {
         this.version = version;
     }
-
-    HttpMessage() {
-        this.headers = new HashMap<>();
-    }
 }
