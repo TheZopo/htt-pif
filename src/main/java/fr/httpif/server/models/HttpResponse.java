@@ -1,10 +1,13 @@
 package fr.httpif.server.models;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class HttpResponse extends HttpMessage {
     private int statusCode;
+
+    public HttpResponse() {
+        statusCode = 200;
+    }
 
     public int getStatusCode() {
         return statusCode;

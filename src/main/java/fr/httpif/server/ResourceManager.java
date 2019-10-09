@@ -1,5 +1,8 @@
 package fr.httpif.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -7,10 +10,14 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import fr.httpif.server.enums.HttpMethodEnum;
+import fr.httpif.server.exceptions.FileIsDirectoryException;
+import fr.httpif.server.exceptions.ServerErrorException;
 import fr.httpif.server.models.HttpRequest;
 import fr.httpif.server.models.HttpResponse;
 
 public class ResourceManager {
+    private static final Logger logger = LoggerFactory.getLogger(ResourceManager.class);
+
     public static ResourceManager INSTANCE;
     private HttpResponse notImplementedResponse;
     private String webRoot;
@@ -34,23 +41,28 @@ public class ResourceManager {
         else if(method == HttpMethodEnum.HEAD) response = handleHead(request);
 
         response.setVersion(request.getVersion());
-        response.setStatusCode(200); //TODO: modify status code
 
         return response;
     }
 
     private HttpResponse handleGet(HttpRequest request) {
+        HttpResponse response = new HttpResponse();
+        response.getHeaders().put("Content-Type", "text/html");
+
         String content = "";
         try {
             content = readResource(request.getUri());
         } catch (FileNotFoundException e) {
-            //TODO: 404 error
-            e.printStackTrace();
+            response.setStatusCode(404);
+        } catch (ServerErrorException e) {
+            response.setStatusCode(500);
+        } catch (FileIsDirectoryException e) {
+            response.setStatusCode(403);
         }
 
-        HttpResponse response = new HttpResponse();
-        response.getHeaders().put("Content-Type", "text/html");
         response.setBody(content);
+
+        logger.info("GET " + request.getUri() + " with status " + response.getStatusCode());
 
         return response;
     }
@@ -71,12 +83,13 @@ public class ResourceManager {
         return notImplementedResponse;
     }
 
-    private String readResource(String uri) throws FileNotFoundException {
+    private String readResource(String uri) throws FileNotFoundException, FileIsDirectoryException, ServerErrorException {
         String path = webRoot + uri;
         String content = "";
 
         File file = new File(path);
         if(!file.exists()) throw new FileNotFoundException();
+        if(file.isDirectory()) throw new FileIsDirectoryException();
 
         FileReader fr = new FileReader(file);
         BufferedReader br = new BufferedReader(fr);
@@ -87,7 +100,7 @@ public class ResourceManager {
                 content += line + "\n";
             }
         } catch(IOException e) {
-            //TODO: handle ? log ?
+            throw new ServerErrorException();
         }
 
         return content;
