@@ -1,5 +1,6 @@
 package fr.httpif.server.network;
 
+import fr.httpif.server.exceptions.ServerErrorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,13 +21,25 @@ public class ClientThread extends Thread {
     public void run() {
         logger.info("Connection, sending data.");
         BufferedReader in = null;
+        HttpResponse response = null;
         try {
             in = new BufferedReader(new InputStreamReader(
                     socket.getInputStream()));
 
             HttpRequest request = parseRequest(in);
-            HttpResponse response = ResourceManager.INSTANCE.handleRequest(request);
+            response = ResourceManager.INSTANCE.handleRequest(request);
 
+        } catch (BadRequestException ex) {
+            logger.warn("BadRequest " + ex.toString());
+            response = new HttpResponse();
+            response.setStatusCode(400);
+        } catch (Exception e) {
+            logger.error(e.toString());
+            response = new HttpResponse();
+            response.setStatusCode(500);
+        }
+
+        try {
             if (response != null) {
                 OutputStream os = socket.getOutputStream();
                 os.write(response.toBytes());
@@ -35,9 +48,6 @@ public class ClientThread extends Thread {
             socket.close();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (BadRequestException ex) {
-            //TODO send error 400
-            ex.printStackTrace();
         }
     }
 
