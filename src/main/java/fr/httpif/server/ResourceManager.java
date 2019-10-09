@@ -53,6 +53,7 @@ public class ResourceManager {
     }
 
     private HttpResponse handleGet(HttpRequest request) {
+        HttpResponse response = new HttpResponse();
         byte[] content = null;
         try {
             content = readResource(request.getUri());
@@ -63,8 +64,6 @@ public class ResourceManager {
         } catch (FileIsDirectoryException e) {
             response.setStatusCode(403);
         }
-
-        HttpResponse response = new HttpResponse();
         //TODO
         response.getHeaders().put("Content-Type", "text/html");
         response.setBody(content);
@@ -90,7 +89,7 @@ public class ResourceManager {
         return notImplementedResponse;
     }
 
-    private byte[] readResource(String uri) throws FileNotFoundException {
+    private byte[] readResource(String uri) throws FileNotFoundException, FileIsDirectoryException, ServerErrorException {
         Path path = Path.of(webRoot, uri);
         byte[] content = null;
 
