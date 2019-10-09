@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 public abstract class HttpMessage {
     protected HashMap<String, String> headers;
-    protected String body;
+    protected byte[] body;
     protected String version;
 
     public HttpMessage() {
@@ -19,11 +19,11 @@ public abstract class HttpMessage {
         this.headers = headers;
     }
 
-    public String getBody() {
+    public byte[] getBody() {
         return body;
     }
 
-    public void setBody(String body) {
+    public void setBody(byte[] body) {
         this.body = body;
     }
 

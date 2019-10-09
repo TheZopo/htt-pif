@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import fr.httpif.server.enums.HttpMethodEnum;
 import fr.httpif.server.models.HttpRequest;
@@ -20,7 +22,7 @@ public class ResourceManager {
         this.webRoot = webRoot;
         notImplementedResponse = new HttpResponse();
         notImplementedResponse.getHeaders().put("Content-Type", "text/plain");
-        notImplementedResponse.setBody("Method not implemented.");
+        notImplementedResponse.setBody("Method not implemented.".getBytes());
     }
 
     public HttpResponse handleRequest(HttpRequest request) {
@@ -34,13 +36,17 @@ public class ResourceManager {
         else if(method == HttpMethodEnum.HEAD) response = handleHead(request);
 
         response.setVersion(request.getVersion());
-        response.setStatusCode(200); //TODO: modify status code
+        response.setStatusCode(200);
+        response.getHeaders().put("Server", "htt-pif");
+        if (response.getBody() != null) {
+            response.getHeaders().put("Content-Length", String.valueOf(response.getBody().length));
+        }
 
         return response;
     }
 
     private HttpResponse handleGet(HttpRequest request) {
-        String content = "";
+        byte[] content = null;
         try {
             content = readResource(request.getUri());
         } catch (FileNotFoundException e) {
@@ -49,6 +55,7 @@ public class ResourceManager {
         }
 
         HttpResponse response = new HttpResponse();
+        //TODO
         response.getHeaders().put("Content-Type", "text/html");
         response.setBody(content);
 
@@ -71,23 +78,17 @@ public class ResourceManager {
         return notImplementedResponse;
     }
 
-    private String readResource(String uri) throws FileNotFoundException {
-        String path = webRoot + uri;
-        String content = "";
+    private byte[] readResource(String uri) throws FileNotFoundException {
+        Path path = Path.of(webRoot, uri);
+        byte[] content = null;
 
-        File file = new File(path);
+        File file = path.toFile();
         if(!file.exists()) throw new FileNotFoundException();
 
-        FileReader fr = new FileReader(file);
-        BufferedReader br = new BufferedReader(fr);
-
         try {
-            String line;
-            while((line = br.readLine()) != null) {
-                content += line + "\n";
-            }
+            content = Files.readAllBytes(path);
         } catch(IOException e) {
-            //TODO: handle ? log ?
+            //TODO
         }
 
         return content;

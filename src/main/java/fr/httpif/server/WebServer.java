@@ -32,7 +32,7 @@ public class WebServer {
       this.resourceManager = new ResourceManager(args[0]);
     }
     else {
-      this.resourceManager = new ResourceManager("../../web_root");
+      this.resourceManager = new ResourceManager("web_root");
     }
   }
 

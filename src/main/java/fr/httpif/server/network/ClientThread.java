@@ -9,10 +9,7 @@ import fr.httpif.server.exceptions.BadRequestException;
 import fr.httpif.server.models.HttpRequest;
 import fr.httpif.server.models.HttpResponse;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 
 public class ClientThread extends Thread {
@@ -31,9 +28,9 @@ public class ClientThread extends Thread {
             HttpResponse response = ResourceManager.INSTANCE.handleRequest(request);
 
             if (response != null) {
-                PrintWriter out = new PrintWriter(socket.getOutputStream());
-                out.write(response.toString());
-                out.flush();
+                OutputStream os = socket.getOutputStream();
+                os.write(response.toBytes());
+                os.flush();
             }
             socket.close();
         } catch (IOException e) {
@@ -73,18 +70,13 @@ public class ClientThread extends Thread {
                 headerLine = reader.readLine();
             }
 
-            String body = "";
+            byte body[] = null;
             if(request.getHeaders().containsKey("Content-Length")) {
                 int bodyLength = Integer.parseInt(request.getHeaders().get("Content-Length"));
                 char charBody[] = new char[bodyLength];
                 reader.read(charBody, 0, bodyLength);
-                body = String.valueOf(charBody);
+                body = new String(charBody).getBytes();
             }
-
-            for(String bodyLine : body.split("\n")) {
-                body += bodyLine;
-            }
-
             request.setBody(body);
         }
         catch (Exception ex) {

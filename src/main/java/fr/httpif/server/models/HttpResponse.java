@@ -14,19 +14,30 @@ public class HttpResponse extends HttpMessage {
         this.statusCode = statusCode;
     }
 
-    @Override
-    public String toString() {
+    public String getHeader() {
         String result = this.version + " " + String.valueOf(statusCode) + " " + HttpReplies.get(statusCode) + "\r\n";
 
         for(String key : headers.keySet()) {
             result += key + ": " + headers.get(key) + "\r\n";
         }
-
-        result += "Server: htt-pif\r\n";
         result += "\r\n"; //end of headers
-        result += body;
 
         return result;
+    }
+
+    public byte[] toBytes() {
+        byte[] header = this.getHeader().getBytes();
+        byte[] body = this.getBody();
+
+        if (body != null) {
+            byte[] result = new byte[header.length + body.length];
+            System.arraycopy(header, 0, result, 0, header.length);
+            System.arraycopy(body, 0, result, header.length, body.length);
+            return result;
+        }
+        else {
+            return header;
+        }
     }
 
     private static final Map<Integer, String> HttpReplies = Map.ofEntries(
