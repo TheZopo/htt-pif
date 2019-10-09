@@ -1,5 +1,8 @@
 package fr.httpif.server;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,10 +12,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import fr.httpif.server.enums.HttpMethodEnum;
+import fr.httpif.server.exceptions.FileIsDirectoryException;
+import fr.httpif.server.exceptions.ServerErrorException;
 import fr.httpif.server.models.HttpRequest;
 import fr.httpif.server.models.HttpResponse;
 
 public class ResourceManager {
+    private static final Logger logger = LoggerFactory.getLogger(ResourceManager.class);
+
     public static ResourceManager INSTANCE;
     private HttpResponse notImplementedResponse;
     private String webRoot;
@@ -50,14 +57,19 @@ public class ResourceManager {
         try {
             content = readResource(request.getUri());
         } catch (FileNotFoundException e) {
-            //TODO: 404 error
-            e.printStackTrace();
+            response.setStatusCode(404);
+        } catch (ServerErrorException e) {
+            response.setStatusCode(500);
+        } catch (FileIsDirectoryException e) {
+            response.setStatusCode(403);
         }
 
         HttpResponse response = new HttpResponse();
         //TODO
         response.getHeaders().put("Content-Type", "text/html");
         response.setBody(content);
+
+        logger.info("GET " + request.getUri() + " with status " + response.getStatusCode());
 
         return response;
     }
@@ -84,11 +96,13 @@ public class ResourceManager {
 
         File file = path.toFile();
         if(!file.exists()) throw new FileNotFoundException();
+        if(file.isDirectory()) throw new FileIsDirectoryException();
 
         try {
             content = Files.readAllBytes(path);
         } catch(IOException e) {
             //TODO
+            throw new ServerErrorException();
         }
 
         return content;
