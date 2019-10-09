@@ -1,4 +1,4 @@
-package http.client;
+package fr.httpif.client;
 
 import java.net.InetAddress;
 import java.net.Socket;
