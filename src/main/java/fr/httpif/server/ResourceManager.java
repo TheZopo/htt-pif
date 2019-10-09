@@ -11,12 +11,13 @@ import fr.httpif.server.models.HttpRequest;
 import fr.httpif.server.models.HttpResponse;
 
 public class ResourceManager {
+    public static ResourceManager INSTANCE;
     private HttpResponse notImplementedResponse;
     private String webRoot;
 
     public ResourceManager(String webRoot) {
+        INSTANCE = this;
         this.webRoot = webRoot;
-
         notImplementedResponse = new HttpResponse();
         notImplementedResponse.getHeaders().put("Content-Type", "text/plain");
         notImplementedResponse.setBody("Method not implemented.");

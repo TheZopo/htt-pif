@@ -3,10 +3,11 @@ package fr.httpif.server.network;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import fr.httpif.server.WebServer;
+import fr.httpif.server.ResourceManager;
 import fr.httpif.server.enums.HttpMethodEnum;
 import fr.httpif.server.exceptions.BadRequestException;
 import fr.httpif.server.models.HttpRequest;
+import fr.httpif.server.models.HttpResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,32 +28,18 @@ public class ClientThread extends Thread {
                     socket.getInputStream()));
 
             HttpRequest request = parseRequest(in);
-
-            /*PrintWriter out = new PrintWriter(remote.getOutputStream());
-
-            // read the data sent. We basically ignore it,
-            // stop reading once a blank line is hit. This
-            // blank line signals the end of the client HTTP
-            // headers.
-            String str = ".";
-            while (!str.equals(""))
-                str = in.readLine();
-
-            // Send the response
-            // Send the headers
-            out.println("HTTP/1.0 200 OK");
-            out.println("Content-Type: text/html");
-            out.println("Server: Bot");
-            // this blank line signals the end of the headers
-            out.println("");
-            // Send the HTML page
-            out.println("<H1>Welcome to the Ultra Mini-WebServer</H2>");
-            out.flush(); */
+            HttpResponse response = ResourceManager.INSTANCE.handleRequest(request);
+            if (response != null) {
+                PrintWriter out = new PrintWriter(socket.getOutputStream());
+                out.write(response.toString());
+                out.flush();
+            }
             socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (BadRequestException ex) {
             //TODO send error 400
+            ex.printStackTrace();
         }
     }
 
@@ -93,10 +80,13 @@ public class ClientThread extends Thread {
                 bodyLine = reader.readLine();
             }
             request.setBody(body);
+            return request;
         }
         catch (Exception ex) {
             throw new BadRequestException(ex.toString());
+        } finally {
+            return null;
         }
-        return null;
+
     }
 }

@@ -5,12 +5,11 @@ import java.util.HashMap;
 public abstract class HttpMessage {
     protected HashMap<String, String> headers;
     protected String body;
+    protected String version;
 
     public HttpMessage() {
         headers = new HashMap<>();
     }
-
-    private String version;
 
     public HashMap<String, String> getHeaders() {
         return headers;

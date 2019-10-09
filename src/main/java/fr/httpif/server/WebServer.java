@@ -28,7 +28,12 @@ public class WebServer {
   private ResourceManager resourceManager;
 
   public WebServer(String[] args) {
-    this.resourceManager = new ResourceManager(args[0]);
+    if (args.length > 0) {
+      this.resourceManager = new ResourceManager(args[0]);
+    }
+    else {
+      this.resourceManager = new ResourceManager("../../web_root");
+    }
   }
 
   /**
@@ -41,7 +46,7 @@ public class WebServer {
     logger.info("(press ctrl-c to exit)");
     try {
       // create the main server socket
-      s = new ServerSocket(3000);
+      s = new ServerSocket(80);
     } catch (Exception e) {
       logger.error("Error: " + e);
       return;
