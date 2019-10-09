@@ -8,6 +8,9 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import fr.httpif.server.enums.HttpMethodEnum;
+import fr.httpif.server.models.HttpRequest;
+
 /**
  * Example program from Chapter 1 Programming Spiders, Bots and Aggregators in
  * Java Copyright 2001 by Jeff Heaton
@@ -52,18 +55,11 @@ public class WebServer {
         // blank line signals the end of the client HTTP
         // headers.
         String str = ".";
-        while (!str.equals(""))
-          str = in.readLine();
+        while (!str.equals("")) str = in.readLine();
 
-        // Send the response
-        // Send the headers
-        out.println("HTTP/1.0 200 OK");
-        out.println("Content-Type: text/html");
-        out.println("Server: Bot");
-        // this blank line signals the end of the headers
-        out.println("");
-        // Send the HTML page
-        out.println("<H1>Welcome to the Ultra Mini-WebServer</H2>");
+        //TODO: handle requests
+        out.println(ResourceManager.INSTANCE.handleRequest(new HttpRequest(HttpMethodEnum.GET, "/")));
+
         out.flush();
         remote.close();
       } catch (Exception e) {

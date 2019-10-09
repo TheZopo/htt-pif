@@ -3,9 +3,12 @@ package fr.httpif.server.models;
 import java.util.HashMap;
 
 public abstract class HttpMessage {
-    private HashMap<String, String> headers;
+    protected HashMap<String, String> headers;
+    protected String body;
 
-    private String body;
+    public HttpMessage() {
+        headers = new HashMap<>();
+    }
 
     public HashMap<String, String> getHeaders() {
         return headers;
