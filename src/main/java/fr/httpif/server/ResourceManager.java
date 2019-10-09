@@ -24,15 +24,19 @@ public class ResourceManager {
     }
 
     public HttpResponse handleRequest(HttpRequest request) {
+        HttpResponse response = notImplementedResponse;
         HttpMethodEnum method = request.getMethod();
 
-        if(method == HttpMethodEnum.GET) return handleGet(request);
-        else if(method == HttpMethodEnum.POST) return handlePost(request);
-        else if(method == HttpMethodEnum.PUT) return handlePut(request);
-        else if(method == HttpMethodEnum.DELETE) return handleDelete(request);
-        else if(method == HttpMethodEnum.HEAD) return handleHead(request);
+        if(method == HttpMethodEnum.GET) response = handleGet(request);
+        else if(method == HttpMethodEnum.POST) response = handlePost(request);
+        else if(method == HttpMethodEnum.PUT) response = handlePut(request);
+        else if(method == HttpMethodEnum.DELETE) response = handleDelete(request);
+        else if(method == HttpMethodEnum.HEAD) response = handleHead(request);
 
-        return null;
+        response.setVersion(request.getVersion());
+        response.setStatusCode(200); //TODO: modify status code
+
+        return response;
     }
 
     private HttpResponse handleGet(HttpRequest request) {

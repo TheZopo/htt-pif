@@ -29,6 +29,7 @@ public class ClientThread extends Thread {
 
             HttpRequest request = parseRequest(in);
             HttpResponse response = ResourceManager.INSTANCE.handleRequest(request);
+
             if (response != null) {
                 PrintWriter out = new PrintWriter(socket.getOutputStream());
                 out.write(response.toString());
@@ -56,9 +57,8 @@ public class ClientThread extends Thread {
     }
 
     private HttpRequest parseRequest(BufferedReader reader) throws BadRequestException {
+        HttpRequest request = new HttpRequest();
         try {
-            HttpRequest request = new HttpRequest();
-
             String requestLine = reader.readLine();
             String[] splittedRequestLine = requestLine.split(" ");
             HttpMethodEnum method = HttpMethodEnum.valueOf(splittedRequestLine[0]);
@@ -74,19 +74,24 @@ public class ClientThread extends Thread {
             }
 
             String body = "";
-            String bodyLine = reader.readLine();
-            while (!"".equals(bodyLine)) {
-                body += bodyLine;
-                bodyLine = reader.readLine();
+            if(request.getHeaders().containsKey("Content-Length")) {
+                int bodyLength = Integer.parseInt(request.getHeaders().get("Content-Length"));
+                char charBody[] = new char[bodyLength];
+                reader.read(charBody, 0, bodyLength);
+                body = String.valueOf(charBody);
             }
+
+            for(String bodyLine : body.split("\n")) {
+                body += bodyLine;
+            }
+
             request.setBody(body);
-            return request;
         }
         catch (Exception ex) {
+            ex.printStackTrace();
             throw new BadRequestException(ex.toString());
-        } finally {
-            return null;
         }
 
+        return request;
     }
 }

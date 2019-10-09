@@ -46,7 +46,7 @@ public class WebServer {
     logger.info("(press ctrl-c to exit)");
     try {
       // create the main server socket
-      s = new ServerSocket(80);
+      s = new ServerSocket(3000);
     } catch (Exception e) {
       logger.error("Error: " + e);
       return;
