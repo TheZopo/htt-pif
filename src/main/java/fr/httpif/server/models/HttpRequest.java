@@ -22,9 +22,4 @@ public class HttpRequest extends HttpMessage {
     public void setUri(String uri) {
         this.uri = uri;
     }
-
-    public HttpRequest(HttpMethodEnum method, String uri) {
-        this.method = method;
-        this.uri = uri;
-    }
 }

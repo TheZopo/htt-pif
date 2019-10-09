@@ -2,14 +2,13 @@
 
 package fr.httpif.server;
 
+import fr.httpif.server.network.ClientThread;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-
-import fr.httpif.server.enums.HttpMethodEnum;
-import fr.httpif.server.models.HttpRequest;
 
 /**
  * Example program from Chapter 1 Programming Spiders, Bots and Aggregators in
@@ -49,24 +48,8 @@ public class WebServer {
       try {
         // wait for a connection
         Socket remote = s.accept();
-        // remote is now the connected socket
-        System.out.println("Connection, sending data.");
-        BufferedReader in = new BufferedReader(new InputStreamReader(
-            remote.getInputStream()));
-        PrintWriter out = new PrintWriter(remote.getOutputStream());
+        new ClientThread(remote).start();
 
-        // read the data sent. We basically ignore it,
-        // stop reading once a blank line is hit. This
-        // blank line signals the end of the client HTTP
-        // headers.
-        String str = ".";
-        while (!str.equals("")) str = in.readLine();
-
-        //TODO: handle requests
-        out.println(resourceManager.handleRequest(new HttpRequest(HttpMethodEnum.GET, "/index.html")));
-
-        out.flush();
-        remote.close();
       } catch (Exception e) {
         System.out.println("Error: " + e);
       }
