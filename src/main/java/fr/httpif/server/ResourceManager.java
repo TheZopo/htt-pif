@@ -48,6 +48,8 @@ public class ResourceManager {
             response.getHeaders().put("Content-Length", String.valueOf(response.getBody().length));
         }
 
+        logger.info(request.getMethod() + " " + request.getUri() + " with status " + response.getStatusCode());
+
         return response;
     }
 
@@ -71,8 +73,6 @@ public class ResourceManager {
 
         if(mimeType != null) response.getHeaders().put("Content-Type", mimeType);
         response.setBody(content);
-
-        logger.info("GET " + request.getUri() + " with status " + response.getStatusCode());
 
         return response;
     }
@@ -122,8 +122,9 @@ public class ResourceManager {
     private HttpResponse handlePut(HttpRequest request) throws ServerErrorException, BadRequestException {
         Path path = Path.of(webRoot, request.getUri());
         File file = path.toFile();
+        int statusCode = file.exists() ? 200 : 201;
 
-        if (request.getBody() != null) {
+        if (request.getBody() == null) {
             throw new BadRequestException("Empty body");
         }
 
@@ -133,13 +134,15 @@ public class ResourceManager {
             logger.error(e.toString());
             throw new ServerErrorException();
         }
+
         HttpResponse response = new HttpResponse();
         response.getHeaders().put("Content-Location", request.getUri());
-        response.setStatusCode(201); //created
+        response.setStatusCode(statusCode);
+
         return response;
     }
 
-    private HttpResponse handleDelete(HttpRequest request) throws ServerErrorException {
+    private HttpResponse handleDelete(HttpRequest request) {
         HttpResponse response = new HttpResponse();
         Path path = Path.of(webRoot, request.getUri());
         File file = path.toFile();
@@ -148,20 +151,22 @@ public class ResourceManager {
             response.setStatusCode(404);
             return response;
         }
-        try {
-            Files.delete(path);
-        } catch(IOException e) {
-            logger.error(e.toString());
-            throw new ServerErrorException();
-        }
 
+        file.delete();
         response.setStatusCode(204);
+
         return response;
     }
 
     private HttpResponse handleHead(HttpRequest request) {
         HttpResponse response = handleGet(request);
+
+        if (response.getBody() != null) {
+            response.getHeaders().put("Content-Length", String.valueOf(response.getBody().length));
+        }
+
         response.setBody(null);
+
         return response;
     }
 
