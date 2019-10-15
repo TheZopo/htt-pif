@@ -56,6 +56,8 @@ public class ResourceManager {
         byte[] content = null;
         String mimeType = null;
 
+        if("/".equals(request.getUri())) request.setUri("/index.html");
+
         try {
             content = readResource(request.getUri());
             mimeType = getResourceMimeType(request.getUri());
