@@ -35,6 +35,7 @@ public class ClientThread extends Thread {
             response.setStatusCode(400);
         } catch (Exception e) {
             logger.error(e.toString());
+            e.printStackTrace();
             response = new HttpResponse();
             response.setStatusCode(500);
         }

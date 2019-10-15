@@ -4,11 +4,7 @@ import fr.httpif.server.exceptions.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -78,9 +74,40 @@ public class ResourceManager {
         return response;
     }
 
-    private HttpResponse handlePost(HttpRequest request) {
-        // TODO dynamic resource
-        return handleGet(request);
+    private HttpResponse handlePost(HttpRequest request) throws ServerErrorException {
+        if (request.getBody() != null) {
+            // we have arguments
+            Path path = Path.of(webRoot, request.getUri());
+            File file = path.toFile();
+            String mimeType = getResourceMimeType(request.getUri());
+            HttpResponse response = new HttpResponse();
+            if ("application/x-sh".equals(mimeType)) {
+                try {
+                    ProcessBuilder pb = new ProcessBuilder(request.getUri());
+                    String[] bodyParams = new String(request.getBody()).split("&");
+                    for (String param : bodyParams) {
+                        pb.command(param.split("=")[1]);
+                    }
+                    Process process = pb.start();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(
+                            process.getInputStream()));
+                    String processOutput = "";
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        System.out.println("Script output: " + line);
+                        processOutput += line;
+                    }
+                    response.setBody(processOutput.getBytes());
+                }
+                catch (IOException ex) {
+                    throw new ServerErrorException();
+                }
+            }
+            return response;
+        }
+        else {
+            return handleGet(request);
+        }
     }
 
     private HttpResponse handlePut(HttpRequest request) throws ServerErrorException, BadRequestException {
