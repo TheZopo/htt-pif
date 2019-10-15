@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 import fr.httpif.server.enums.HttpMethodEnum;
 import fr.httpif.server.exceptions.FileIsDirectoryException;
@@ -78,28 +79,34 @@ public class ResourceManager {
         if (request.getBody() != null) {
             // we have arguments
             Path path = Path.of(webRoot, request.getUri());
-            File file = path.toFile();
-            String mimeType = getResourceMimeType(request.getUri());
+
+            String mimeType = getResourceMimeType(path.toString());
             HttpResponse response = new HttpResponse();
-            if ("application/x-sh".equals(mimeType)) {
+            if ("application/x-shar".equals(mimeType)) {
                 try {
-                    ProcessBuilder pb = new ProcessBuilder(request.getUri());
                     String[] bodyParams = new String(request.getBody()).split("&");
-                    for (String param : bodyParams) {
-                        pb.command(param.split("=")[1]);
+                    ArrayList<String> executableParams = new ArrayList<>();
+                    executableParams.add(path.toAbsolutePath().toString());
+
+                    for(String param : bodyParams) {
+                        String[] splittedParam = param.split("=");
+                        if(splittedParam.length == 2) executableParams.add(splittedParam[1]);
                     }
+
+                    ProcessBuilder pb = new ProcessBuilder(executableParams);
+
                     Process process = pb.start();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(
-                            process.getInputStream()));
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
                     String processOutput = "";
                     String line;
-                    while ((line = reader.readLine()) != null) {
-                        System.out.println("Script output: " + line);
-                        processOutput += line;
-                    }
+                    while ((line = reader.readLine()) != null) processOutput += line;
+
+                    response.getHeaders().put("Content-Type", "text/plain");
                     response.setBody(processOutput.getBytes());
                 }
                 catch (IOException ex) {
+                    ex.printStackTrace();
                     throw new ServerErrorException();
                 }
             }
